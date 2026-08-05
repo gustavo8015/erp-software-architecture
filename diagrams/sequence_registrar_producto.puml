@@ -1,0 +1,31 @@
+@startuml sequence_registrar_producto
+' Diagrama de Secuencia - HU-01: Registrar nuevo producto
+
+skinparam sequenceMessageAlign center
+
+actor "Gestor de Inventario" as admin
+participant "SPA\n(React)" as spa
+participant "API Monolítica\n(Spring Boot)" as api
+database "Base de Datos\n(PostgreSQL)" as db
+
+admin -> spa : Rellena y envía formulario\nde nuevo producto
+activate spa
+spa -> spa : Validación básica del formulario\n(campos obligatorios)
+spa -> api : POST /api/productos\n(nombre, descripción, unidad_medida)
+activate api
+api -> api : Valida los datos\n(reglas de negocio, duplicados)
+api -> db : INSERT INTO productos (...)
+activate db
+db --> api : Producto creado con ID
+deactivate db
+api --> spa : 201 Created\n(producto con ID)
+deactivate api
+spa --> admin : Muestra mensaje de éxito\ny actualiza la lista de productos
+deactivate spa
+
+== Flujo alternativo: datos inválidos ==
+admin -> spa : Envía formulario con "nombre" vacío
+activate spa
+spa --> admin : Muestra error de validación\n("El nombre es obligatorio")
+deactivate spa
+@enduml

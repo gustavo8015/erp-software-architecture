@@ -1,0 +1,67 @@
+@startuml mer_compras
+' Modelo Entidad-Relación (MER) - Módulo de Compras
+
+hide circle
+skinparam linetype ortho
+
+entity "Producto" as producto {
+  * id_producto : integer <<PK>>
+  --
+  * nombre : varchar(100)
+  descripcion : text
+  * unidad_medida : varchar(20)
+  * activo : boolean
+}
+
+entity "Proveedor" as proveedor {
+  * id_proveedor : integer <<PK>>
+  --
+  * razon_social : varchar(150)
+  * nit : varchar(20)
+  contacto : varchar(100)
+  telefono : varchar(20)
+  email : varchar(100)
+}
+
+entity "Producto_Proveedor" as pp {
+  * id_producto : integer <<FK>>
+  * id_proveedor : integer <<FK>>
+  --
+  precio_unitario : decimal(12,2)
+  tiempo_entrega_dias : integer
+}
+
+entity "Orden_Compra" as oc {
+  * id_orden : integer <<PK>>
+  --
+  * id_proveedor : integer <<FK>>
+  * fecha_emision : date
+  * estado : varchar(20)
+  observaciones : text
+}
+
+entity "Detalle_Orden_Compra" as doc {
+  * id_detalle : integer <<PK>>
+  --
+  * id_orden : integer <<FK>>
+  * id_producto : integer <<FK>>
+  * cantidad : decimal(12,2)
+  * precio_unitario : decimal(12,2)
+}
+
+entity "Recepcion_Mercancia" as rec {
+  * id_recepcion : integer <<PK>>
+  --
+  * id_orden : integer <<FK>>
+  * fecha_recepcion : date
+  * cantidad_recibida : decimal(12,2)
+  observaciones : text
+}
+
+producto ||--o{ pp
+proveedor ||--o{ pp
+proveedor ||--o{ oc
+oc ||--|{ doc
+producto ||--o{ doc
+oc ||--o{ rec
+@enduml

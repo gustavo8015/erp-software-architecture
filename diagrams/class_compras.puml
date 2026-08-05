@@ -1,0 +1,80 @@
+@startuml class_compras
+' Diagrama de Clases Simplificado - Módulo de Compras (backend Spring Boot)
+
+skinparam classAttributeIconSize 0
+
+package "com.erp.compras" {
+
+  class ProductoController {
+    +crearProducto(dto: ProductoDTO): ResponseEntity
+    +listarProductos(): ResponseEntity
+    +obtenerProducto(id: int): ResponseEntity
+  }
+
+  class ProductoService {
+    +crear(dto: ProductoDTO): Producto
+    +validarDuplicado(nombre: String): boolean
+    +listar(): List<Producto>
+  }
+
+  class ProductoRepository {
+    +save(p: Producto): Producto
+    +findByNombre(nombre: String): Optional<Producto>
+    +findAll(): List<Producto>
+  }
+
+  class Producto {
+    -idProducto: int
+    -nombre: String
+    -descripcion: String
+    -unidadMedida: String
+    -activo: boolean
+  }
+
+  class Proveedor {
+    -idProveedor: int
+    -razonSocial: String
+    -nit: String
+    -contacto: String
+    -email: String
+  }
+
+  class OrdenCompra {
+    -idOrden: int
+    -fechaEmision: Date
+    -estado: EstadoOrden
+    +agregarDetalle(d: DetalleOrdenCompra): void
+    +calcularTotal(): BigDecimal
+  }
+
+  class DetalleOrdenCompra {
+    -cantidad: BigDecimal
+    -precioUnitario: BigDecimal
+    +subtotal(): BigDecimal
+  }
+
+  class RecepcionMercancia {
+    -idRecepcion: int
+    -fechaRecepcion: Date
+    -cantidadRecibida: BigDecimal
+  }
+
+  enum EstadoOrden {
+    EMITIDA
+    RECIBIDA_PARCIAL
+    RECIBIDA_TOTAL
+    ANULADA
+  }
+}
+
+ProductoController --> ProductoService : usa
+ProductoService --> ProductoRepository : usa
+ProductoRepository --> Producto : persiste
+
+OrdenCompra "1" *-- "1..*" DetalleOrdenCompra : contiene
+DetalleOrdenCompra "many" --> "1" Producto : referencia
+OrdenCompra "many" --> "1" Proveedor : emitida a
+OrdenCompra "1" o-- "0..*" RecepcionMercancia : recibe
+OrdenCompra --> EstadoOrden
+Producto "many" -- "many" Proveedor : catálogo/precios
+@enduml

@@ -1,0 +1,35 @@
+@startuml c2_containers
+' Diagrama de Contenedores (C4 - Nivel 2) - Sistema ERP (arquitectura monolítica)
+' Estilo C4 definido localmente (equivalente a C4_Container.puml)
+
+skinparam defaultTextAlignment center
+skinparam rectangle {
+  BackgroundColor<<container>> #438DD5
+  FontColor<<container>> #FFFFFF
+  BorderColor<<container>> #2E6295
+  BackgroundColor<<external>> #999999
+  FontColor<<external>> #FFFFFF
+  BorderColor<<external>> #6B6B6B
+  RoundCorner 10
+}
+skinparam database {
+  BackgroundColor #438DD5
+  FontColor #FFFFFF
+  BorderColor #2E6295
+}
+
+actor "Administrador de Compras\n[Persona]" as admin
+
+rectangle "Sistema ERP" {
+  rectangle "Single-Page Application\n[Contenedor: JavaScript, React]\nInterfaz de usuario en el navegador:\nformularios de productos, proveedores\ny órdenes de compra" <<container>> as spa
+  rectangle "API Monolítica\n[Contenedor: Java, Spring Boot]\nLógica de negocio de todos los módulos:\nCompras, Facturación, Stock,\nActivos Fijos, Empleados, EIS" <<container>> as api
+  database "Base de Datos\n[Contenedor: PostgreSQL]\nAlmacena productos, proveedores,\nórdenes, facturas, empleados, etc." as db
+}
+
+rectangle "Sistema Contable Externo\n[Sistema Externo]" <<external>> as acc
+
+admin --> spa : Usa\n[HTTPS]
+spa --> api : Llamadas a la API\n[HTTPS / JSON]
+api --> db : Lee y escribe\n[JDBC]
+api --> acc : Envía facturas y\nasientos contables\n[HTTPS / JSON]
+@enduml

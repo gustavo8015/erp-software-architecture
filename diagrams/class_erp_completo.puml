@@ -1,0 +1,264 @@
+@startuml class_erp_completo
+' Diagrama de Clases UML Completo - Sistema ERP (dominio de todos los módulos)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+left to right direction
+
+package "Módulo de Compras" {
+  class Producto {
+    -idProducto: int
+    -nombre: String
+    -descripcion: String
+    -unidadMedida: String
+    -stockMinimo: BigDecimal
+    -activo: boolean
+    +activar(): void
+    +desactivar(): void
+  }
+
+  class Proveedor {
+    -idProveedor: int
+    -razonSocial: String
+    -nit: String
+    -contacto: String
+    -telefono: String
+    -email: String
+    +validarNit(): boolean
+  }
+
+  class ProductoProveedor {
+    -precioUnitario: BigDecimal
+    -tiempoEntregaDias: int
+  }
+
+  class OrdenCompra {
+    -idOrden: int
+    -fechaEmision: Date
+    -estado: EstadoOrden
+    -observaciones: String
+    +agregarDetalle(p: Producto, cant: BigDecimal): void
+    +calcularTotal(): BigDecimal
+    +emitir(): void
+    +anular(): void
+  }
+
+  class DetalleOrdenCompra {
+    -cantidad: BigDecimal
+    -precioUnitario: BigDecimal
+    +subtotal(): BigDecimal
+  }
+
+  class RecepcionMercancia {
+    -idRecepcion: int
+    -fechaRecepcion: Date
+    -cantidadRecibida: BigDecimal
+    +confirmar(): void
+  }
+
+  enum EstadoOrden {
+    EMITIDA
+    RECIBIDA_PARCIAL
+    RECIBIDA_TOTAL
+    ANULADA
+  }
+}
+
+package "Módulo de Facturación" {
+  class Cliente {
+    -idCliente: int
+    -razonSocial: String
+    -nit: String
+    -email: String
+  }
+
+  class Factura {
+    -idFactura: int
+    -numero: String
+    -fechaEmision: Date
+    -estado: EstadoFactura
+    -cufe: String
+    +calcularSubtotal(): BigDecimal
+    +calcularIva(): BigDecimal
+    +calcularTotal(): BigDecimal
+    +transmitirDian(): void
+  }
+
+  class DetalleFactura {
+    -cantidad: BigDecimal
+    -precioUnitario: BigDecimal
+    -porcentajeIva: BigDecimal
+    +subtotal(): BigDecimal
+  }
+
+  class NotaCredito {
+    -idNota: int
+    -fecha: Date
+    -motivo: String
+    -valor: BigDecimal
+  }
+
+  enum EstadoFactura {
+    BORRADOR
+    EMITIDA
+    VALIDADA
+    RECHAZADA
+    ANULADA
+  }
+}
+
+package "Módulo Stock/Costos" {
+  class MovimientoInventario {
+    -idMovimiento: int
+    -fecha: Date
+    -tipo: TipoMovimiento
+    -cantidad: BigDecimal
+    -costoUnitario: BigDecimal
+    -documentoOrigen: String
+  }
+
+  class SaldoInventario {
+    -cantidadDisponible: BigDecimal
+    -costoPromedio: BigDecimal
+    +recalcularCostoPromedio(mov: MovimientoInventario): void
+  }
+
+  class Bodega {
+    -idBodega: int
+    -nombre: String
+    -ubicacion: String
+  }
+
+  enum TipoMovimiento {
+    ENTRADA_COMPRA
+    SALIDA_VENTA
+    AJUSTE
+  }
+}
+
+package "Módulo Activos Fijos" {
+  class ActivoFijo {
+    -idActivo: int
+    -placa: String
+    -descripcion: String
+    -valorAdquisicion: BigDecimal
+    -fechaAdquisicion: Date
+    -vidaUtilMeses: int
+    -valorEnLibros: BigDecimal
+    -estado: EstadoActivo
+    +depreciarMes(): Depreciacion
+    +darDeBaja(motivo: String): void
+  }
+
+  class Depreciacion {
+    -periodo: String
+    -valorCuota: BigDecimal
+    -depreciacionAcumulada: BigDecimal
+  }
+
+  enum EstadoActivo {
+    ACTIVO
+    TOTALMENTE_DEPRECIADO
+    DADO_DE_BAJA
+  }
+}
+
+package "Módulo Empleados" {
+  class Empleado {
+    -idEmpleado: int
+    -nombre: String
+    -documento: String
+    -cargo: String
+    -fechaIngreso: Date
+    -salario: BigDecimal
+    -estado: EstadoEmpleado
+  }
+
+  class NovedadLaboral {
+    -idNovedad: int
+    -tipo: TipoNovedad
+    -fechaInicio: Date
+    -fechaFin: Date
+    +diasNovedad(): int
+  }
+
+  class LiquidacionNomina {
+    -periodo: String
+    -totalDevengado: BigDecimal
+    -totalDeducciones: BigDecimal
+    +netoPagar(): BigDecimal
+  }
+
+  enum EstadoEmpleado {
+    ACTIVO
+    EN_VACACIONES
+    RETIRADO
+  }
+
+  enum TipoNovedad {
+    VACACIONES
+    INCAPACIDAD
+    LICENCIA
+  }
+}
+
+package "Módulo EIS" {
+  class Indicador {
+    -idIndicador: int
+    -nombre: String
+    -formula: String
+    -valorActual: BigDecimal
+    -valorAnterior: BigDecimal
+    +variacion(): BigDecimal
+  }
+
+  class Tablero {
+    -idTablero: int
+    -nombre: String
+    -periodo: String
+    +actualizar(): void
+  }
+}
+
+' ==== Relaciones Compras ====
+Producto "1" -- "0..*" ProductoProveedor
+Proveedor "1" -- "0..*" ProductoProveedor
+Proveedor "1" -- "0..*" OrdenCompra : recibe >
+OrdenCompra "1" *-- "1..*" DetalleOrdenCompra
+DetalleOrdenCompra "0..*" --> "1" Producto
+OrdenCompra "1" o-- "0..*" RecepcionMercancia
+OrdenCompra ..> EstadoOrden
+
+' ==== Relaciones Facturación ====
+Cliente "1" -- "0..*" Factura : recibe >
+Factura "1" *-- "1..*" DetalleFactura
+DetalleFactura "0..*" --> "1" Producto
+Factura "1" o-- "0..1" NotaCredito : anulada por >
+Factura ..> EstadoFactura
+
+' ==== Relaciones Stock/Costos ====
+RecepcionMercancia ..> MovimientoInventario : genera entrada
+Factura ..> MovimientoInventario : genera salida
+MovimientoInventario "0..*" --> "1" Producto
+MovimientoInventario "0..*" --> "1" Bodega
+SaldoInventario "0..*" --> "1" Producto
+SaldoInventario "0..*" --> "1" Bodega
+MovimientoInventario ..> TipoMovimiento
+
+' ==== Relaciones Activos Fijos ====
+ActivoFijo "1" *-- "0..*" Depreciacion
+ActivoFijo "0..*" --> "0..1" Empleado : responsable
+ActivoFijo ..> EstadoActivo
+
+' ==== Relaciones Empleados ====
+Empleado "1" -- "0..*" NovedadLaboral
+LiquidacionNomina "0..*" --> "1" Empleado
+NovedadLaboral ..> TipoNovedad
+Empleado ..> EstadoEmpleado
+
+' ==== Relaciones EIS ====
+Tablero "1" o-- "1..*" Indicador
+Indicador ..> OrdenCompra : consolida compras
+Indicador ..> Factura : consolida ventas
+Indicador ..> SaldoInventario : consolida inventario
+@enduml

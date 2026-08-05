@@ -1,0 +1,36 @@
+@startuml c1_context
+' Diagrama de Contexto (C4 - Nivel 1) - Sistema ERP
+' Estilo C4 definido localmente (equivalente a C4_Context.puml)
+
+skinparam defaultTextAlignment center
+skinparam rectangle {
+  BackgroundColor<<system>> #1168BD
+  FontColor<<system>> #FFFFFF
+  BorderColor<<system>> #0B4884
+  BackgroundColor<<external>> #999999
+  FontColor<<external>> #FFFFFF
+  BorderColor<<external>> #6B6B6B
+  RoundCorner 10
+}
+skinparam actor {
+  BackgroundColor #08427B
+  FontColor #08427B
+}
+
+actor "Administrador de Compras\n[Persona]\nGestiona productos,\nproveedores y órdenes de compra" as admin
+actor "Gestor de Inventario\n[Persona]\nMantiene el catálogo\nde productos y el stock" as inv
+actor "Gerente / Directivo\n[Persona]\nConsulta indicadores\nen el módulo EIS" as mgr
+
+rectangle "Sistema ERP\n[Sistema de Software]\nGestiona los procesos de negocio:\nCompras, Facturación, Stock/Costos,\nActivos Fijos, Empleados y EIS" <<system>> as erp
+
+rectangle "Sistema Contable Externo\n[Sistema Externo]\nContabilidad y finanzas" <<external>> as acc
+rectangle "DIAN / Facturación Electrónica\n[Sistema Externo]\nValidación de facturas electrónicas" <<external>> as dian
+rectangle "Proveedores (Portal/Email)\n[Sistema Externo]\nRecepción de órdenes de compra" <<external>> as prov
+
+admin --> erp : Registra productos, proveedores\ny órdenes de compra
+inv --> erp : Consulta y actualiza\ncatálogo y stock
+mgr --> erp : Consulta reportes\ne indicadores (EIS)
+erp --> acc : Envía datos de facturas\ny asientos contables
+erp --> dian : Emite facturas\nelectrónicas
+erp --> prov : Envía órdenes\nde compra
+@enduml
